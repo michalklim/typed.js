@@ -80,8 +80,11 @@
 		this.curLoop = 0;
 
 		// for stopping
-		this.stop = false;
+		this.stop = false
 
+		// for changing current string
+		this.force = false;
+		this.forceIndex = 0;
 		// for pausing and continuing
 		this.backspacing = false;
 
@@ -236,18 +239,16 @@
 			// exit when stopped
 			if (this.stop === true) {
 				return;
-			}
-
+			};
 			// varying values for setTimeout during typing
 			// can't be global since number changes each time loop is executed
 			var humanize = Math.round(Math.random() * (100 - 30)) + this.backSpeed;
 			var self = this;
-
 			// Needed for pausing
 			self.strPos = curStrPos;
 			self.backspacing = true;
 
-			self.timeout = setTimeout(function () {
+			self.timeout = setTimeout(function (force, index) {
 
 				// ----- this part is optional ----- //
 				// check string array position
@@ -277,7 +278,10 @@
 
 				// ----- continue important stuff ----- //
 				// replace text with base text + typed characters
-				var nextString = self.elContent + curString.substr(0, curStrPos);
+				var nextString;
+
+				nextString = self.elContent + curString.substr(0, curStrPos);
+
 				if (self.attr) {
 					self.el.attr(self.attr, nextString);
 				} else {
@@ -299,16 +303,20 @@
 				// if the stop number has been reached, increase
 				// array position to next string
 				else if (curStrPos <= self.stopNum) {
-					self.arrayPos++;
-
+					self.backspacing = false;
+					if (self.force) {
+						self.arrayPos = self.forceIndex;
+					} else {
+						self.arrayPos++;
+					}
 					if (self.arrayPos === self.strings.length) {
 						self.arrayPos = 0;
 						self.init();
 					} else {
 						self.typewrite(self.strings[self.arrayPos], curStrPos);
 					}
+					self.force = false;
 				}
-
 				// humanized value for typing
 			}, humanize);
 
@@ -336,15 +344,27 @@
 		,
 		reset: function () {
 			var self = this;
-			clearInterval(self.timeout);
 			var id = this.el.attr('id');
 			this.el.after('<span id="' + id + '"/>')
 			this.el.remove();
 			this.cursor.remove();
 			// Send the callback
 			self.options.resetCallback();
+		},
+		changeStr: function (index) {
+			var self = this;
+			index = index < 0 ? 0 : index;
+			self.force = true;
+			self.forceIndex = index;
+			clearInterval(self.timeout);
+			self.backspace(self.strings[self.arrayPos], self.strPos);
+		},
+		nextStr: function () {
+			this.changeStr(this.arrayPos + 1);
+		},
+		prevStr: function () {
+			this.changeStr(this.arrayPos - 1);
 		}
-
 	};
 
 	$.fn.typed = function (option) {
