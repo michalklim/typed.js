@@ -269,7 +269,7 @@
 						var tag = '';
 						while (curString.substr(curStrPos).charAt(0) !== '<') {
 							tag -= curString.substr(curStrPos).charAt(0);
-							curStrPos--;
+							curStrPos = curStrPos - 2;
 						}
 						curStrPos--;
 						tag += '<';
@@ -353,6 +353,10 @@
 		},
 		changeStr: function (index) {
 			var self = this;
+
+			if (self.stop === true) {
+				self.continueTyping();
+			}
 			index = index < 0 ? 0 : index;
 			self.force = true;
 			self.forceIndex = index;
